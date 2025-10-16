@@ -56,8 +56,15 @@ public class UserController {
 		return new ResponseEntity<>(user, HttpStatus.OK);	
 		
 	}
-	
-	// TODO - createUser (@Mappings, URI=/users, and method)
+
+    // TODO - createUser (@Mappings, URI=/users, and method)
+    @PostMapping("/users")
+    public ResponseEntity<User> createUser(@RequestBody User user) {
+
+        userService.saveUser(user);
+
+        return new ResponseEntity<>(user, HttpStatus.CREATED);
+    }
 
 	// TODO - updateUser (@Mappings, URI, and method)
 	

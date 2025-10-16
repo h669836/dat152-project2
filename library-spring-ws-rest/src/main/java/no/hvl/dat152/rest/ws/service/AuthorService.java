@@ -43,8 +43,14 @@ public class AuthorService {
 	
 	// TODO public Author updateAuthor(Author author, int id)
     public Author updateAuthor(Author author, int id) throws AuthorNotFoundException{
-        Author author1 = authorRepository.findById(id)
+        Author existingAuthor = authorRepository.findById(id)
                 .orElseThrow(() -> new AuthorNotFoundException("Author with id: " + id + " was not found"));
+
+        existingAuthor.setFirstname(author.getFirstname());
+        existingAuthor.setLastname(author.getLastname());
+        existingAuthor.setBooks(author.getBooks());
+
+        return existingAuthor;
     }
 	
 	// TODO public List<Author> findAll()

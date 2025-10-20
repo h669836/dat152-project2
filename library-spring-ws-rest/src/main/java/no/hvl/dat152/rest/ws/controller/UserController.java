@@ -79,7 +79,10 @@ public class UserController {
     }
 
     // TODO - getUserOrders (@Mappings, URI=/users/{id}/orders, and method)
-    
+    @GetMapping("/users/{id}/orders")
+    public ResponseEntity<Set<Order>> getUserOrders(@PathVariable Long id) throws UserNotFoundException {
+        Set<Order> orders = userService.getUserOrders(id);
+        return new ResponseEntity<>(orders, HttpStatus.OK);    }
 
     // TODO - getUserOrder (@Mappings, URI=/users/{uid}/orders/{oid}, and method)
 

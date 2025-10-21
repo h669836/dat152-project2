@@ -9,6 +9,7 @@ import java.util.Set;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -73,7 +74,7 @@ public class UserController {
 
     // TODO - deleteUser (@Mappings, URI, and method)
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<User> deleteUser(@PathVariable Long id) throws UserNotFoundException {
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) throws UserNotFoundException {
         userService.deleteUser(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -82,13 +83,39 @@ public class UserController {
     @GetMapping("/users/{id}/orders")
     public ResponseEntity<Set<Order>> getUserOrders(@PathVariable Long id) throws UserNotFoundException {
         Set<Order> orders = userService.getUserOrders(id);
-        return new ResponseEntity<>(orders, HttpStatus.OK);    }
+        return ResponseEntity.ok(orders);   }
 
     // TODO - getUserOrder (@Mappings, URI=/users/{uid}/orders/{oid}, and method)
+    @GetMapping("/users/{uid}/orders/{oid}")
+    public ResponseEntity<Order> getUserOrder(@PathVariable Long uid,
+                                              @PathVariable Long oid) throws UserNotFoundException, OrderNotFoundException{
+        Order order = userService.getUserOrder(uid, oid);
+        return ResponseEntity.ok(order);
+    }
 
     // TODO - deleteUserOrder (@Mappings, URI, and method)
+    @DeleteMapping("/users/{uid}/orders/{oid}")
+    public ResponseEntity<Void> deleteUserOrder(@PathVariable Long uid,
+                                                 @PathVariable Long oid) throws UserNotFoundException, OrderNotFoundException{
+        userService.deleteOrderForUser(uid, oid);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 
     // TODO - createUserOrder (@Mappings, URI, and method) + HATEOAS links
+    @PostMapping("/users/{id}/orders")
+    public ResponseEntity<EntityModel<User>> createUserOrder(@PathVariable Long id,
+                                                 @RequestBody Order order) throws UserNotFoundException, OrderNotFoundException {
+        User user = userService.createOrdersForUser(id, order);
+
+        EntityModel<User> resource = EntityModel.of(user);
+
+        resource.add(linkTo(methodOn(UserController.class).getUser(id)).withRel("user"));
+        resource.add(linkTo(methodOn(UserController.class).getUserOrders(id)).withRel("user-orders"));
+
+        return ResponseEntity.created(
+                linkTo(methodOn(UserController.class).getUser(id)).toUri()
+        ).body(resource);
+    }
 
 
 }

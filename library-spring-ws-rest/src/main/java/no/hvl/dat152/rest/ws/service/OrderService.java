@@ -6,6 +6,8 @@ package no.hvl.dat152.rest.ws.service;
 import java.util.List;
 
 import java.time.LocalDate;
+
+import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,13 +40,32 @@ public class OrderService {
 		
 		return order;
 	}
-	
-	// TODO public void deleteOrder(Long id)
-	
-	// TODO public List<Order> findAllOrders()
+
+    // TODO public void deleteOrder(Long id)
+    public void deleteOrder(Long id) throws OrderNotFoundException {
+        Order order = findOrder(id);
+        orderRepository.delete(order);
+    }
+
+    // TODO public List<Order> findAllOrders()
+    public List<Order> findAllOrders() {
+        return orderRepository.findAll();
+    }
 	
 	// TODO public List<Order> findByExpiryDate(LocalDate expiry, Pageable page)
-	
-	// TODO public Order updateOrder(Order order, Long id)
+    public List<Order> findByExpiryDate(LocalDate expiry, Pageable page) {
+        Page<Order> orderPage = orderRepository.findByExpiryBefore(expiry, page);
+        return orderPage.getContent();
+    }
+
+    // TODO public Order updateOrder(Order order, Long id)
+    public Order updateOrder(Order order, Long id) throws OrderNotFoundException{
+        Order updatedOrder = findOrder(id);
+
+        updatedOrder.setExpiry(order.getExpiry());
+        updatedOrder.setIsbn(order.getIsbn());
+
+        return orderRepository.save(updatedOrder);
+    }
 
 }

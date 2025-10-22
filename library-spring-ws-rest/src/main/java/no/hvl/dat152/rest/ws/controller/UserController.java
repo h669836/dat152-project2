@@ -3,8 +3,8 @@
  */
 package no.hvl.dat152.rest.ws.controller;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
@@ -76,7 +76,7 @@ public class UserController {
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) throws UserNotFoundException {
         userService.deleteUser(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     // TODO - getUserOrders (@Mappings, URI=/users/{id}/orders, and method)
@@ -98,23 +98,38 @@ public class UserController {
     public ResponseEntity<Void> deleteUserOrder(@PathVariable Long uid,
                                                  @PathVariable Long oid) throws UserNotFoundException, OrderNotFoundException{
         userService.deleteOrderForUser(uid, oid);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     // TODO - createUserOrder (@Mappings, URI, and method) + HATEOAS links
     @PostMapping("/users/{id}/orders")
-    public ResponseEntity<EntityModel<User>> createUserOrder(@PathVariable Long id,
+    public ResponseEntity<Map<String, Object>> createUserOrder(@PathVariable Long id,
                                                  @RequestBody Order order) throws UserNotFoundException, OrderNotFoundException {
         User user = userService.createOrdersForUser(id, order);
 
-        EntityModel<User> resource = EntityModel.of(user);
+        // Create a custom response map
+        Map<String, Object> response = new HashMap<>();
 
-        resource.add(linkTo(methodOn(UserController.class).getUser(id)).withRel("user"));
-        resource.add(linkTo(methodOn(UserController.class).getUserOrders(id)).withRel("user-orders"));
+        // Add user fields
+        response.put("id", user.getUserid());
+        response.put("firstname", user.getFirstname());
+        response.put("lastname", user.getLastname());
+
+        // Extract ISBNs from orders
+        List<String> isbns = user.getOrders().stream()
+                .map(Order::getIsbn)
+                .collect(Collectors.toList());
+        response.put("isbn", isbns);
+
+        // Add links manually
+        List<Map<String, String>> links = new ArrayList<>();
+        links.add(Map.of("rel", "user", "href", linkTo(methodOn(UserController.class).getUser(id)).toUri().toString()));
+        links.add(Map.of("rel", "user-orders", "href", linkTo(methodOn(UserController.class).getUserOrders(id)).toUri().toString()));
+        response.put("links", links);
 
         return ResponseEntity.created(
                 linkTo(methodOn(UserController.class).getUser(id)).toUri()
-        ).body(resource);
+        ).body(response);
     }
 
 

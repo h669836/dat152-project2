@@ -31,5 +31,52 @@ import no.hvl.dat152.rest.ws.service.AuthorService;
 public class AuthorController {
 
 	// TODO authority annotation
+    @Autowired
+    private AuthorService authorService;
+
+
+    // TODO - getAllAuthor (@Mappings, URI, and method)
+    @GetMapping("/authors")
+    public ResponseEntity<List<Author>> getAllAuthor(){
+        List<Author> authors = authorService.findAll();
+
+        return ResponseEntity.ok(authors); //same as <>(author, HttpStatus.OK
+    }
+
+    // TODO - getAuthor (@Mappings, URI, and method)
+    @GetMapping("/authors/{id}")
+    public ResponseEntity<Author> getAuthor(@PathVariable int id) throws AuthorNotFoundException {
+        Author author = authorService.findById(id);
+
+        return new ResponseEntity<>(author, HttpStatus.OK);
+    }
+
+    // TODO - getBooksByAuthorId (@Mappings, URI, and method)
+    @GetMapping("/authors/{id}/books")
+    public ResponseEntity<Set<Book>> getBooksByAuthorId(@PathVariable int id) throws AuthorNotFoundException {
+        Set<Book> booksByAuthor = authorService.findBooksByAuthorId(id);
+
+        return new ResponseEntity<>(booksByAuthor, HttpStatus.OK);
+    }
+
+    // TODO - createAuthor (@Mappings, URI, and method)
+    @PostMapping("/authors")
+    public ResponseEntity<Author> createAuthor(@RequestBody Author author){
+        Author newAuthor = authorService.saveAuthor(author);
+
+        return new ResponseEntity<>(newAuthor, HttpStatus.CREATED);
+    }
+
+    // TODO - updateAuthor (@Mappings, URI, and method)
+    @PutMapping("/authors/{id}")
+    public ResponseEntity<Author> updateAuthor(@PathVariable int id,
+                                               @RequestBody Author author) throws AuthorNotFoundException {
+
+        author.setAuthorId(id);
+
+        Author updatedAuthor = authorService.updateAuthor(author, id);
+
+        return new ResponseEntity<>(updatedAuthor, HttpStatus.OK);
+    }
 
 }

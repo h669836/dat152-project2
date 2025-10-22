@@ -51,6 +51,11 @@ public class OrderService {
     public List<Order> findAllOrders() {
         return orderRepository.findAll();
     }
+
+    public List<Order> findAllOrders(Pageable pageable) {
+        Page<Order> page = orderRepository.findAll(pageable);
+        return page.getContent();
+    }
 	
 	// TODO public List<Order> findByExpiryDate(LocalDate expiry, Pageable page)
     public List<Order> findByExpiryDate(LocalDate expiry, Pageable page) {

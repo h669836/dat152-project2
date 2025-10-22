@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,20 +46,26 @@ public class OrderController {
     @GetMapping("/orders")
     public ResponseEntity<List<Order>> getAllBorrowOrders(@RequestParam(required = false) LocalDate expiry,
                                                           Pageable paginate) {
+
+        List<Order> orders;
         if (expiry != null) {
-            List<Order> orders = orderService.findByExpiryDate(expiry, paginate);
-            return ResponseEntity.ok(orders);
+            orders = orderService.findByExpiryDate(expiry, paginate);
         } else {
-            List<Order> orders = orderService.findAllOrders();
-            return ResponseEntity.ok(orders);
+            orders = orderService.findAllOrders(paginate);
         }
+        return ResponseEntity.ok(orders);
     }
 
     // TODO - getBorrowOrder (@Mappings, URI=/orders/{id}, and method)
     @GetMapping("/orders/{id}")
-    public ResponseEntity<Order> getBorrowOrder(@PathVariable Long id) throws OrderNotFoundException{
+    public ResponseEntity<EntityModel<Order>> getBorrowOrder(@PathVariable Long id) throws OrderNotFoundException{
         Order order = orderService.findOrder(id);
-        return ResponseEntity.ok(order);
+
+        EntityModel<Order> resource = EntityModel.of(order);
+        resource.add(linkTo(methodOn(OrderController.class).getBorrowOrder(id)).withSelfRel());
+        resource.add(linkTo(methodOn(OrderController.class).getAllBorrowOrders(null, Pageable.unpaged())).withRel("all-orders"));
+
+        return ResponseEntity.ok(resource);
     }
 
     // TODO - updateOrder (@Mappings, URI=/orders/{id}, and method)
@@ -73,7 +80,7 @@ public class OrderController {
     @DeleteMapping("/orders/{id}")
     public ResponseEntity<Void> deleteBookOrder(@PathVariable Long id) throws OrderNotFoundException {
         orderService.deleteOrder(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.ok().build();
     }
 	
 }
